@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, Modal, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Avatar, Button, Card, Input, Text } from "react-native-elements";
 
 export default function PerfilScreen() {
@@ -13,40 +13,42 @@ export default function PerfilScreen() {
   const [senha, setSenha] = useState("********");
   const [senhaConfirmacao, setSenhaConfirmacao] = useState("");
 
+  // estado para controlar edição
+  const [campoEditando, setCampoEditando] = useState<null | "email" | "senha" | "nome">(null);
+  const [novoValor, setNovoValor] = useState("");
+
   const handleSalvar = () => {
-    if (
-      senhaConfirmacao === "" &&
-      (email !== "Luis.victor@email.com" || senha !== "********")
-    ) {
-      Alert.alert(
-        "Confirme sua senha",
-        "É necessário confirmar sua senha para salvar alterações."
-      );
+    if (campoEditando && senhaConfirmacao.trim() === "") {
+      Alert.alert("Confirme sua senha", "Digite sua senha para confirmar a alteração.");
       return;
     }
 
-    Alert.alert("Sucesso", "Informações atualizadas!");
+    if (campoEditando === "email") setEmail(novoValor);
+    if (campoEditando === "senha") setSenha(novoValor);
+    if (campoEditando === "nome") setNome(novoValor);
+
+    setCampoEditando(null);
     setSenhaConfirmacao("");
+    setNovoValor("");
+    Alert.alert("Sucesso", "Informações atualizadas!");
   };
 
   const handleLogout = () => {
     router.replace("/");
   };
-  
+
   const handleGoBackToHome = () => {
-      router.replace('/Telainicial');
+    router.replace('/Telainicial');
   };
 
   return (
     <View style={styles.container}>
-      
-      <View style={styles.backButtonContainer}>
-        <TouchableOpacity onPress={handleGoBackToHome}>
-          <Ionicons name="arrow-back" size={30} color="#000" />
-        </TouchableOpacity>
-      </View>
+      {/* Botão de voltar bonito */}
+      <TouchableOpacity style={styles.backButton} onPress={handleGoBackToHome}>
+        <Ionicons name="arrow-back-circle" size={36} color="#0a2a66" />
+      </TouchableOpacity>
 
-      <Text h4 style={{ marginBottom: 10 }}>Meu Perfil</Text>
+      <Text h4 style={{ marginBottom: 10, textAlign: "center" }}>Meu Perfil</Text>
 
       <Card containerStyle={styles.card}>
         <View style={{ alignItems: "center", marginBottom: 20 }}>
@@ -55,7 +57,7 @@ export default function PerfilScreen() {
             rounded
             source={{ uri: "https://via.placeholder.com/150" }}
           />
-          <Text style={{ marginTop: 10 }}>{nome}</Text>
+          <Text style={{ marginTop: 10, fontWeight: "600", fontSize: 16 }}>{nome}</Text>
           <Text style={{ color: "gray" }}>Membro desde 2024</Text>
         </View>
 
@@ -68,37 +70,64 @@ export default function PerfilScreen() {
         <Input
           label="Email"
           value={email}
-          onChangeText={setEmail}
-          rightIcon={{ name: "edit", color: "gray" }}
+          editable={false}
+          rightIcon={
+            <Ionicons name="pencil" size={20} color="gray" onPress={() => setCampoEditando("email")} />
+          }
         />
 
         <Input
           label="Senha"
-          secureTextEntry
           value={senha}
-          onChangeText={setSenha}
-          rightIcon={{ name: "edit", color: "gray" }}
-        />
-
-        <Input
-          label="Confirme sua senha"
           secureTextEntry
-          value={senhaConfirmacao}
-          onChangeText={setSenhaConfirmacao}
+          editable={false}
+          rightIcon={
+            <Ionicons name="pencil" size={20} color="gray" onPress={() => setCampoEditando("senha")} />
+          }
         />
 
-        <Button
-          title="Salvar Alterações"
-          onPress={handleSalvar}
-          containerStyle={{ marginBottom: 10 }}
-          buttonStyle={{ backgroundColor: "#2196F3", borderRadius: 10 }}
-        />
         <Button
           title="Logout"
           onPress={handleLogout}
           buttonStyle={{ backgroundColor: "red", borderRadius: 10 }}
         />
       </Card>
+
+      <Modal visible={campoEditando !== null} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text h4 style={{ marginBottom: 10 }}>Editar {campoEditando}</Text>
+
+            <Input
+              placeholder={`Novo ${campoEditando}`}
+              value={novoValor}
+              onChangeText={setNovoValor}
+              secureTextEntry={campoEditando === "senha"}
+            />
+
+            <Input
+              placeholder="Confirme sua senha atual"
+              value={senhaConfirmacao}
+              onChangeText={setSenhaConfirmacao}
+              secureTextEntry
+            />
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Button
+                title="Cancelar"
+                type="outline"
+                onPress={() => setCampoEditando(null)}
+                containerStyle={{ flex: 1, marginRight: 5 }}
+              />
+              <Button
+                title="Salvar"
+                onPress={handleSalvar}
+                containerStyle={{ flex: 1, marginLeft: 5 }}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -109,14 +138,26 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: "#fff",
   },
-  backButtonContainer: {
-    position: 'absolute',
+  backButton: {
+    position: "absolute",
     top: 15,
     left: 15,
     zIndex: 1,
   },
   card: {
     borderRadius: 10,
+    padding: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
     padding: 20,
   },
 });

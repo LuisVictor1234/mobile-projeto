@@ -1,6 +1,7 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function RegistroScreen() {
   const router = useRouter();
@@ -8,7 +9,8 @@ export default function RegistroScreen() {
   const [nomeCompleto, setNomeCompleto] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [dataNascimento, setDataNascimento] = useState('');
+  const [dataNascimento, setDataNascimento] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleRegister = () => {
     if (!email || !nomeCompleto || !senha || !confirmarSenha || !dataNascimento) {
@@ -24,8 +26,14 @@ export default function RegistroScreen() {
   };
 
   const handleNavigateToLogin = () => {
-
     router.replace('/');
+  };
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false); // fecha o picker depois da escolha
+    if (selectedDate) {
+      setDataNascimento(selectedDate);
+    }
   };
 
   return (
@@ -73,12 +81,26 @@ export default function RegistroScreen() {
         />
 
         <Text style={styles.label}>Data de Nascimento</Text>
-        <TextInput
+        <TouchableOpacity
           style={styles.input}
-          placeholder="dd/mm/aaaa"
-          value={dataNascimento}
-          onChangeText={setDataNascimento}
-        />
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={{ color: dataNascimento ? '#000' : '#999' }}>
+            {dataNascimento
+              ? dataNascimento.toLocaleDateString('pt-BR')
+              : 'Selecionar data'}
+          </Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={dataNascimento || new Date(2000, 0, 1)}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            maximumDate={new Date()} // impede datas futuras
+            onChange={onChangeDate}
+          />
+        )}
 
         <TouchableOpacity style={styles.button} onPress={handleRegister}>
           <Text style={styles.buttonText}>Criar Conta</Text>
@@ -134,6 +156,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     marginBottom: 16,
+    justifyContent: 'center',
     backgroundColor: '#f9f9f9',
   },
   button: {
@@ -158,3 +181,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

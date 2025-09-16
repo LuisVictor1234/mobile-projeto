@@ -68,7 +68,7 @@ export default function ExploreScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text h4>Minhas Listas de Tarefas</Text>
+        <Text h4>Minhas <br></br>Listas</Text>
         <View style={styles.headerButtons}>
           <Button title="Perfil" onPress={() => router.push("/(tabs)/Perfil")} />
           <Button title="+ Nova Lista" onPress={() => setModalVisible(true)} />
@@ -129,7 +129,7 @@ export default function ExploreScreen() {
               containerStyle={{ flex: 1 }}
             />
             <Button
-              title="Adicionar"
+              title="+"
               onPress={adicionarTarefaTemp}
               buttonStyle={styles.addButton}
             />
