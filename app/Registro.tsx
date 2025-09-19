@@ -3,13 +3,14 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+
 export default function RegistroScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [nomeCompleto, setNomeCompleto] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [dataNascimento, setDataNascimento] = useState<Date | null>(null);
+  const [dataNascimento, setDataNascimento] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleRegister = () => {
@@ -29,10 +30,11 @@ export default function RegistroScreen() {
     router.replace('/');
   };
 
-  const onChangeDate = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false); // fecha o picker depois da escolha
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios'); // no iOS mantém aberto, no Android fecha
     if (selectedDate) {
-      setDataNascimento(selectedDate);
+      const formattedDate = selectedDate.toLocaleDateString('pt-BR');
+      setDataNascimento(formattedDate);
     }
   };
 
@@ -85,20 +87,17 @@ export default function RegistroScreen() {
           style={styles.input}
           onPress={() => setShowDatePicker(true)}
         >
-          <Text style={{ color: dataNascimento ? '#000' : '#999' }}>
-            {dataNascimento
-              ? dataNascimento.toLocaleDateString('pt-BR')
-              : 'Selecionar data'}
+          <Text style={{ color: dataNascimento ? '#000' : '#888' }}>
+            {dataNascimento || 'Selecione sua data de nascimento'}
           </Text>
         </TouchableOpacity>
 
         {showDatePicker && (
           <DateTimePicker
-            value={dataNascimento || new Date(2000, 0, 1)}
+            value={new Date()}
             mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            maximumDate={new Date()} // impede datas futuras
-            onChange={onChangeDate}
+            display="default"
+            onChange={handleDateChange}
           />
         )}
 
@@ -156,8 +155,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     marginBottom: 16,
-    justifyContent: 'center',
     backgroundColor: '#f9f9f9',
+    justifyContent: 'center',
   },
   button: {
     backgroundColor: '#0a2a66',
@@ -181,4 +180,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
