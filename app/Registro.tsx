@@ -1,8 +1,6 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function RegistroScreen() {
   const router = useRouter();
@@ -10,11 +8,9 @@ export default function RegistroScreen() {
   const [nomeCompleto, setNomeCompleto] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [dataNascimento, setDataNascimento] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleRegister = () => {
-    if (!email || !nomeCompleto || !senha || !confirmarSenha || !dataNascimento) {
+    if (!email || !nomeCompleto || !senha || !confirmarSenha) {
       Alert.alert('Erro', 'Preencha todos os campos');
       return;
     }
@@ -28,14 +24,6 @@ export default function RegistroScreen() {
 
   const handleNavigateToLogin = () => {
     router.replace('/');
-  };
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios'); // no iOS mantém aberto, no Android fecha
-    if (selectedDate) {
-      const formattedDate = selectedDate.toLocaleDateString('pt-BR');
-      setDataNascimento(formattedDate);
-    }
   };
 
   return (
@@ -81,25 +69,6 @@ export default function RegistroScreen() {
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}
         />
-
-        <Text style={styles.label}>Data de Nascimento</Text>
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={{ color: dataNascimento ? '#000' : '#888' }}>
-            {dataNascimento || 'Selecione sua data de nascimento'}
-          </Text>
-        </TouchableOpacity>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={new Date()}
-            mode="date"
-            display="default"
-            onChange={handleDateChange}
-          />
-        )}
 
         <TouchableOpacity style={styles.button} onPress={handleRegister}>
           <Text style={styles.buttonText}>Criar Conta</Text>

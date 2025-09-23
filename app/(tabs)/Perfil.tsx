@@ -8,12 +8,10 @@ export default function PerfilScreen() {
   const router = useRouter();
 
   const [nome, setNome] = useState("Luis Victor");
-  const [dataNascimento, setDataNascimento] = useState("14/05/1990");
   const [email, setEmail] = useState("Luis.victor@email.com");
   const [senha, setSenha] = useState("********");
   const [senhaConfirmacao, setSenhaConfirmacao] = useState("");
 
-  // estado para controlar edição
   const [campoEditando, setCampoEditando] = useState<null | "email" | "senha" | "nome">(null);
   const [novoValor, setNovoValor] = useState("");
 
@@ -43,7 +41,6 @@ export default function PerfilScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Botão de voltar bonito */}
       <TouchableOpacity style={styles.backButton} onPress={handleGoBackToHome}>
         <Ionicons name="arrow-back-circle" size={36} color="#0a2a66" />
       </TouchableOpacity>
@@ -60,12 +57,6 @@ export default function PerfilScreen() {
           <Text style={{ marginTop: 10, fontWeight: "600", fontSize: 16 }}>{nome}</Text>
           <Text style={{ color: "gray" }}>Membro desde 2024</Text>
         </View>
-
-        <Input
-          label="Data de Nascimento"
-          value={dataNascimento}
-          onChangeText={setDataNascimento}
-        />
 
         <Input
           label="Email"
