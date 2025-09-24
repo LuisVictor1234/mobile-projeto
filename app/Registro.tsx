@@ -2,6 +2,8 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+const API_URL = 'http://localhost:3000'; 
+
 export default function RegistroScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -9,7 +11,7 @@ export default function RegistroScreen() {
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!email || !nomeCompleto || !senha || !confirmarSenha) {
       Alert.alert('Erro', 'Preencha todos os campos');
       return;
@@ -18,8 +20,32 @@ export default function RegistroScreen() {
       Alert.alert('Erro', 'As senhas não coincidem');
       return;
     }
-    Alert.alert('Sucesso', 'Conta criada com sucesso!');
-    router.replace('/');
+
+    try {
+      const response = await fetch(`${API_URL}/api/users/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nome: nomeCompleto,
+          email: email,
+          senha: senha,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Sucesso', 'Conta criada com sucesso!');
+        router.replace('/');
+      } else {
+        Alert.alert('Erro', data.error || 'Erro ao registrar usuário.');
+      }
+    } catch (error) {
+      console.error('Erro de rede:', error);
+      Alert.alert('Erro', 'Não foi possível conectar ao servidor. Verifique sua conexão e a URL da API.');
+    }
   };
 
   const handleNavigateToLogin = () => {

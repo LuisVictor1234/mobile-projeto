@@ -1,43 +1,136 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { Alert, Modal, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, Alert, Modal, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Avatar, Button, Card, Input, Text } from "react-native-elements";
+import { getUserToken, removeUserToken } from "../Armazem/userStorage";
+
+// URL base do seu servidor backend
+const API_URL = 'http://localhost:3000'; 
 
 export default function PerfilScreen() {
   const router = useRouter();
 
-  const [nome, setNome] = useState("Luis Victor");
-  const [email, setEmail] = useState("Luis.victor@email.com");
-  const [senha, setSenha] = useState("********");
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
   const [senhaConfirmacao, setSenhaConfirmacao] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const [campoEditando, setCampoEditando] = useState<null | "email" | "senha" | "nome">(null);
   const [novoValor, setNovoValor] = useState("");
 
-  const handleSalvar = () => {
-    if (campoEditando && senhaConfirmacao.trim() === "") {
-      Alert.alert("Confirme sua senha", "Digite sua senha para confirmar a alteração.");
+  const fetchUserData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const token = await getUserToken();
+      if (!token) {
+        router.replace("/");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/users/me`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setNome(data.nome);
+        setEmail(data.email);
+        setSenha("********"); 
+      } else {
+        Alert.alert("Erro", data.error || "Não foi possível carregar os dados do usuário.");
+        router.replace("/");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+      Alert.alert("Erro", "Não foi possível conectar ao servidor.");
+      router.replace("/");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+useFocusEffect(
+  useCallback(() => {
+    fetchUserData();
+  }, [])
+);
+
+  const handleSalvar = async () => {
+    if (campoEditando === "senha" && novoValor !== senhaConfirmacao) {
+      Alert.alert("Erro", "As novas senhas não coincidem.");
       return;
     }
 
-    if (campoEditando === "email") setEmail(novoValor);
-    if (campoEditando === "senha") setSenha(novoValor);
-    if (campoEditando === "nome") setNome(novoValor);
+    if (!senhaConfirmacao.trim()) {
+      Alert.alert("Confirme sua senha", "Digite sua senha atual para confirmar a alteração.");
+      return;
+    }
 
-    setCampoEditando(null);
-    setSenhaConfirmacao("");
-    setNovoValor("");
-    Alert.alert("Sucesso", "Informações atualizadas!");
+    try {
+      const token = await getUserToken();
+      if (!token) {
+        router.replace("/");
+        return;
+      }
+      
+      const updateData: { [key: string]: string } = {
+        current_password: senhaConfirmacao,
+      };
+      
+      if (campoEditando === "nome") {
+        updateData.nome = novoValor;
+      } else if (campoEditando === "email") {
+        updateData.email = novoValor;
+      } else if (campoEditando === "senha") {
+        updateData.new_password = novoValor;
+      }
+      
+      const response = await fetch(`${API_URL}/api/users/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        Alert.alert("Sucesso", "Informações atualizadas!");
+        setCampoEditando(null);
+        setNovoValor("");
+        setSenhaConfirmacao("");
+        fetchUserData(); 
+      } else {
+        Alert.alert("Erro", data.error || "Erro ao atualizar informações.");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar dados:", error);
+      Alert.alert("Erro", "Não foi possível conectar ao servidor.");
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await removeUserToken();
     router.replace("/");
   };
 
   const handleGoBackToHome = () => {
     router.replace('/Telainicial');
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0a2a66" />
+        <Text style={{ marginTop: 10 }}>Carregando perfil...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -107,7 +200,11 @@ export default function PerfilScreen() {
               <Button
                 title="Cancelar"
                 type="outline"
-                onPress={() => setCampoEditando(null)}
+                onPress={() => {
+                  setCampoEditando(null);
+                  setNovoValor("");
+                  setSenhaConfirmacao("");
+                }}
                 containerStyle={{ flex: 1, marginRight: 5 }}
               />
               <Button
@@ -150,5 +247,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

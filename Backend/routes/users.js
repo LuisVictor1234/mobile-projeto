@@ -101,4 +101,48 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
+router.put('/me', authMiddleware, async (req, res) => {
+    const { nome, email, senha } = req.body;
+    const { id: userId } = req.user;
+
+    if (!nome && !email && !senha) {
+        return res.status(400).json({ message: 'Nenhum dado fornecido para atualização.' });
+    }
+
+    try {
+        const updateFields = [];
+        const updateValues = [];
+
+        if (nome) {
+            updateFields.push('nome = ?');
+            updateValues.push(nome);
+        }
+        
+        if (email) {
+            const [existingEmail] = await pool.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, userId]);
+            if (existingEmail.length > 0) {
+                return res.status(409).json({ message: 'Este e-mail já está cadastrado.' });
+            }
+            updateFields.push('email = ?');
+            updateValues.push(email);
+        }
+        
+        if (senha) {
+            const hashedPassword = await bcrypt.hash(senha, 10);
+            updateFields.push('senha = ?');
+            updateValues.push(hashedPassword);
+        }
+
+        const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
+        updateValues.push(userId);
+
+        await pool.query(updateQuery, updateValues);
+        
+        res.status(200).json({ message: 'Perfil atualizado com sucesso.' });
+    } catch (error) {
+        console.error('Erro ao atualizar o perfil:', error);
+        res.status(500).json({ message: 'Erro ao atualizar o perfil.' });
+    }
+});
+
 module.exports = router;
