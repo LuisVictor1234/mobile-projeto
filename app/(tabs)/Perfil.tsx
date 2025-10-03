@@ -5,7 +5,6 @@ import { ActivityIndicator, Alert, Modal, StyleSheet, TouchableOpacity, View } f
 import { Avatar, Button, Card, Input, Text } from "react-native-elements";
 import { getUserToken, removeUserToken } from "../Armazem/userStorage";
 
-// URL base do seu servidor backend
 const API_URL = 'http://localhost:3000'; 
 
 export default function PerfilScreen() {
